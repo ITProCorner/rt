@@ -32,10 +32,9 @@ $agent->login( 'root' => 'password' );
 
     my $user_id = $user->id;
 
-    $agent->get_ok( $url . "Admin/Users/Modify.html?id=" . $user_id );
-    $agent->follow_link_ok( { text => 'Anonymize User' } );
-
-    $agent->submit_form_ok( { form_id => 'user-info-modal', }, "Anonymize user" );
+    $agent->post( $url . "Admin/Users/Modify.html?id=" . $user_id, [
+        Anonymize => 1
+    ]);
 
     # UserId is still the same, but all other records should be anonimyzed for TestUser
     my ( $ret, $msg ) = $user->Load($user_id);
@@ -74,15 +73,10 @@ $agent->login( 'root' => 'password' );
 
     is( $user->FirstCustomFieldValue('TestCustomfield'), 'Testing', 'Customfield exists and has value for user.' );
 
-    $agent->get_ok( $url . "Admin/Users/Modify.html?id=" . $user->id );
-    $agent->follow_link_ok( { text => 'Anonymize User' } );
-
-    $agent->submit_form_ok(
-        {   form_id => 'user-info-modal',
-            fields  => { clear_customfields => 'On' },
-        },
-        "Anonymize user and customfields"
-    );
+    $agent->post( $url . "Admin/Users/Modify.html?id=" . $user->id, [
+        clear_customfields => 'On',
+        Anonymize          => 1
+    ]);
 
     is( $user->FirstCustomFieldValue('TestCustomfield'), undef, 'Customfield value cleared' );
 }
